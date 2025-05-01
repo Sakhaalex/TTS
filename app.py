@@ -45,10 +45,10 @@ def check_nsfw(prompt: str) -> bool:
 
     except requests.exceptions.RequestException as e:
         print(f"Error during NSFW check: {e}")
-        raise gr.Error(f"Failed to check prompt safety: {e}")
+        raise gr.Error(f"Failed to check prompt safety.")
     except Exception as e:
         print(f"Unexpected error during NSFW check: {e}")
-        raise gr.Error(f"An unexpected error occurred during safety check: {e}")
+        raise gr.Error(f"An unexpected error occurred during safety check. Please wait for a second and try again.")
 
 
 def generate_audio(prompt: str, voice: str, emotion: str, seed: int) -> bytes:
@@ -73,7 +73,7 @@ def generate_audio(prompt: str, voice: str, emotion: str, seed: int) -> bytes:
         if 'audio' not in content_type:
             print(f"Warning: Unexpected content type received: {content_type}")
             print(f"Response Text: {response.text[:500]}")
-            raise gr.Error(f"API did not return audio. Response: {response.text[:200]}")
+            raise gr.Error(f"API did not return audio.")
 
         return response.content
 
@@ -82,10 +82,10 @@ def generate_audio(prompt: str, voice: str, emotion: str, seed: int) -> bytes:
         error_details = ""
         if hasattr(e, 'response') and e.response is not None:
             error_details = e.response.text[:200]
-        raise gr.Error(f"Failed to generate audio: {e}. Details: {error_details}")
+        raise gr.Error(f"Failed to generate audio. Please wait for a second and try again.")
     except Exception as e:
         print(f"Unexpected error during audio generation: {e}")
-        raise gr.Error(f"An unexpected error occurred during audio generation: {e}")
+        raise gr.Error(f"An unexpected error occurred during audio generation. Please wait for a second and try again.")
 
 
 
@@ -107,7 +107,7 @@ def text_to_speech_app(prompt: str, voice: str, emotion: str, use_random_seed: b
     try:
         is_nsfw = check_nsfw(prompt)
     except gr.Error as e:
-        return None, str(e)
+        return None, f"There was an error. Please wait for a second and try again."
 
     if is_nsfw:
         print("Prompt flagged as inappropriate.")
