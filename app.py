@@ -185,8 +185,8 @@ with gr.Blocks() as app:
     gr.Examples(
         examples=[
             ["Hello there! This is a test of the text-to-speech system.", "alloy", "neutral", True, 12345],
-            ["Surely you wouldn't want *that*. [laughs]", "shimmer", "sarcastic and mocking", True, 12345],
-            ["I am feeling...a bit down today. [sighs]", "fable", "sad and depressed, with stammering", False, 9876],
+            ["Surely *you* [hiccup] wouldn't want *that*. [laughs]", "shimmer", "sarcastic and mocking", True, 12345],
+            ["[sobbing]I am feeling...[sighs] a bit down today [cry]", "fable", "sad and depressed, with stammering", False, 662437],
             ["This technology is absolutely amazing!", "nova", "excited and joyful", True, 12345],
         ],
         inputs=[prompt_input, voice_dropdown, emotion_input, random_seed_checkbox, seed_input],
