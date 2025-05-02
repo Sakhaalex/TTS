@@ -90,7 +90,8 @@ def generate_audio(prompt: str, voice: str, emotion: str, seed: int) -> bytes:
 
 
 def text_to_speech_app(prompt: str, voice: str, emotion: str, use_random_seed: bool, specific_seed: int):
-  
+
+    print("\n\n\n"+prompt+"\n\n\n")
     if not prompt:
         raise gr.Error("Prompt cannot be empty.")
     if not emotion:
