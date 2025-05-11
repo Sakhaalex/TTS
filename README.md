@@ -1,6 +1,6 @@
 ---
 title: Text To Speech Unlimited
-emoji: 📊
+emoji: 🔥
 colorFrom: indigo
 colorTo: purple
 sdk: gradio
