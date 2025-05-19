@@ -143,12 +143,16 @@ def toggle_seed_input(use_random_seed):
 with gr.Blocks() as app:
     gr.Markdown("# Advanced OpenAI Text-To-Speech Unlimited")
     gr.Markdown(
-        "Enter text, choose a voice and emotion, and generate audio. "
-        "The text will be checked for appropriateness before generation. "
-        "Use it as much as you want." 
-        """**Like & follow** for more AI projects:
-            • Instagram: [@nihal_gazi_io](https://www.instagram.com/nihal_gazi_io/)  
-            • Discord: nihal_gazi_io"""
+        """Enter text, choose a voice and emotion, and generate audio. 
+        The text will be checked for appropriateness before generation. 
+        Use it as much as you want.
+        
+        
+        **Like & follow** for more AI projects:
+
+        
+        • Instagram: [@nihal_gazi_io](https://www.instagram.com/nihal_gazi_io/)  
+        • Discord: nihal_gazi_io"""
     )
 
     with gr.Row():
