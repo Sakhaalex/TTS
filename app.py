@@ -9,167 +9,116 @@ import os
 NSFW_URL_TEMPLATE = os.getenv("NSFW_API_URL_TEMPLATE")
 TTS_URL_TEMPLATE = os.getenv("TTS_API_URL_TEMPLATE")
 
-
 if not NSFW_URL_TEMPLATE:
-    raise ValueError("Missing Secret: NSFW_API_URL_TEMPLATE is not set in Hugging Face Space secrets.")
+    raise ValueError("Missing Secret: NSFW_API_URL_TEMPLATE is not set.")
 if not TTS_URL_TEMPLATE:
-    raise ValueError("Missing Secret: TTS_API_URL_TEMPLATE is not set in Hugging Face Space secrets.")
-# VOICES
+    raise ValueError("Missing Secret: TTS_API_URL_TEMPLATE is not set.")
+
 VOICES = [
-    "alloy", "echo", "fable", "onyx", "nova", "shimmer",  # Standard OpenAI Voices
-    "coral", "verse", "ballad", "ash", "sage", "amuch", "dan" # Some additional pre-trained
+    "alloy", "echo", "fable", "onyx", "nova", "shimmer",
+    "coral", "verse", "ballad", "ash", "sage", "amuch", "dan"
 ]
 
 
-
 def check_nsfw(prompt: str) -> bool:
-    global NSFW_URL_TEMPLATE 
     try:
         encoded_prompt = urllib.parse.quote(prompt)
         url = NSFW_URL_TEMPLATE.format(prompt=encoded_prompt)
-        print(f"DEBUG: Checking NSFW URL: {url.split('?')[0]}... (query params hidden)")
+        print(f"DEBUG: Checking NSFW URL: {url.split('?')[0]}...")
 
-        response = requests.get(url, timeout=20)
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
 
         result = response.text.strip().upper()
-        print(f"DEBUG: NSFW Check Response: '{result}'")
-
-        if result == "YES":
-            return True
-        elif result == "NO":
-            return False
-        else:
-            print(f"Warning: Unexpected response from NSFW checker: {response.text}")
-            return True # unexpected responses = potentially NSFW
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error during NSFW check: {e}")
-        raise gr.Error(f"Failed to check prompt safety.")
+        return result != "NO"
     except Exception as e:
-        print(f"Unexpected error during NSFW check: {e}")
-        raise gr.Error(f"An unexpected error occurred during safety check. Please wait for a second and try again.")
+        print(f"NSFW check error: {e}")
+        raise gr.Error("Safety check failed. Please try again.")
 
 
 def generate_audio(prompt: str, voice: str, emotion: str, seed: int) -> bytes:
-   # Generates audio using the API from server
-    global TTS_URL_TEMPLATE 
     try:
-        encoded_prompt = urllib.parse.quote(prompt)
-        encoded_emotion = urllib.parse.quote(emotion)
-
         url = TTS_URL_TEMPLATE.format(
-            prompt=encoded_prompt,
-            emotion=encoded_emotion,
+            prompt=urllib.parse.quote(prompt),
+            emotion=urllib.parse.quote(emotion),
             voice=voice,
             seed=seed
         )
-        print(f"DEBUG: Generating Audio URL: {url.split('?')[0]}... (query params hidden)")
-
+        print(f"DEBUG: Audio URL: {url.split('?')[0]}...")
         response = requests.get(url, timeout=60)
         response.raise_for_status()
 
-        content_type = response.headers.get('content-type', '').lower()
-        if 'audio' not in content_type:
-            print(f"Warning: Unexpected content type received: {content_type}")
-            print(f"Response Text: {response.text[:500]}")
-            raise gr.Error(f"API did not return audio.")
+        if 'audio' not in response.headers.get("content-type", "").lower():
+            raise gr.Error("Invalid response: No audio returned.")
 
         return response.content
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error during audio generation: {e}")
-        error_details = ""
-        if hasattr(e, 'response') and e.response is not None:
-            error_details = e.response.text[:200]
-        raise gr.Error(f"Failed to generate audio. Please wait for a second and try again.")
     except Exception as e:
-        print(f"Unexpected error during audio generation: {e}")
-        raise gr.Error(f"An unexpected error occurred during audio generation. Please wait for a second and try again.")
+        print(f"TTS error: {e}")
+        raise gr.Error("Audio generation failed. Please try again.")
 
 
-
-def text_to_speech_app(prompt: str, voice: str, emotion: str, use_random_seed: bool, specific_seed: int):
-
-    print("\n\n\n"+prompt+"\n\n\n")
+def text_to_speech_app(prompt, voice, emotion, use_random_seed, specific_seed):
     if not prompt:
         raise gr.Error("Prompt cannot be empty.")
+    if not voice:
+        raise gr.Error("Please select a voice.")
     if not emotion:
         emotion = "neutral"
-        print("Warning: No emotion provided, defaulting to 'neutral'.")
-    if not voice:
-         raise gr.Error("Please select a voice.")
 
     seed = random.randint(0, 2**32 - 1) if use_random_seed else int(specific_seed)
-    print(f"Using Seed: {seed}")
+    print(f"Seed: {seed}")
 
-    # check NSFW
-    print("Checking prompt safety...")
     try:
-        is_nsfw = check_nsfw(prompt)
+        if check_nsfw(prompt):
+            return None, "⚠️ Prompt flagged as inappropriate."
     except gr.Error as e:
-        return None, f"There was an error. Please wait for a second and try again."
+        return None, str(e)
 
-    if is_nsfw:
-        print("Prompt flagged as inappropriate.")
-        return None, "Error: The prompt was flagged as inappropriate and cannot be processed."
-
-    # if not nsfw
-    print("Prompt is safe. Generating audio...")
     try:
         audio_bytes = generate_audio(prompt, voice, emotion, seed)
-
-        # audio save to a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio_file:
-            temp_audio_file.write(audio_bytes)
-            temp_file_path = temp_audio_file.name
-            print(f"Audio saved temporarily to: {temp_file_path}")
-
-        return temp_file_path, f"Audio generated successfully with voice '{voice}', emotion '{emotion}', and seed {seed}."
-
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+            f.write(audio_bytes)
+            return f.name, f"✅ Audio generated with voice '{voice}', emotion '{emotion}', seed {seed}."
     except gr.Error as e:
-         return None, str(e)
-    except Exception as e:
-        print(f"Unexpected error in main function: {e}")
-        return None, f"An unexpected error occurred: {e}"
-
-
+        return None, str(e)
 
 
 def toggle_seed_input(use_random_seed):
-    
     return gr.update(visible=not use_random_seed, value=12345)
 
-with gr.Blocks() as app:
-    gr.Markdown("# Advanced OpenAI Text-To-Speech Unlimited")
-    gr.Markdown(
-        """Enter text, choose a voice and emotion, and generate audio. 
-        The text will be checked for appropriateness before generation. 
-        Use it as much as you want.
-        
-        
-        **Like & follow** for more AI projects:
 
-        
-        • Instagram: [@nihal_gazi_io](https://www.instagram.com/nihal_gazi_io/)  
-        • Discord: nihal_gazi_io"""
-    )
+def show_loading():
+    return gr.update(value="⏳ Generating...", interactive=False), gr.update(interactive=False)
+
+
+def hide_loading():
+    return gr.update(value="", interactive=True), gr.update(interactive=True)
+
+
+with gr.Blocks(theme=gr.themes.Base()) as app:
+    gr.Markdown("""
+    # 🎤 Advanced TTS Generator
+    Convert your text into expressive speech using multiple voice styles.
+    _Safe, fast, and unlimited!_
+
+    ---
+    """)
 
     with gr.Row():
         with gr.Column(scale=2):
-            prompt_input = gr.Textbox(label="Prompt", placeholder="Enter the text you want to convert to speech...")
-            emotion_input = gr.Textbox(label="Emotion Style", placeholder="e.g., happy, sad, excited, calm...")
+            prompt_input = gr.Textbox(label="Prompt", placeholder="Type something...")
+            emotion_input = gr.Textbox(label="Emotion Style", placeholder="e.g., happy, calm, angry...")
             voice_dropdown = gr.Dropdown(label="Voice", choices=VOICES, value="alloy")
         with gr.Column(scale=1):
             random_seed_checkbox = gr.Checkbox(label="Use Random Seed", value=True)
             seed_input = gr.Number(label="Specific Seed", value=12345, visible=False, precision=0)
 
-    submit_button = gr.Button("Generate Audio", variant="primary")
+    submit_button = gr.Button("✨ Generate Audio", variant="primary")
+    loading_status = gr.Textbox(visible=False)
 
     with gr.Row():
         audio_output = gr.Audio(label="Generated Audio", type="filepath")
-        status_output = gr.Textbox(label="Status")
-
+        status_output = gr.Textbox(label="Status", interactive=False)
 
     random_seed_checkbox.change(
         fn=toggle_seed_input,
@@ -178,36 +127,33 @@ with gr.Blocks() as app:
     )
 
     submit_button.click(
+        fn=show_loading,
+        inputs=[],
+        outputs=[status_output, submit_button]
+    ).then(
         fn=text_to_speech_app,
-        inputs=[
-            prompt_input,
-            voice_dropdown,
-            emotion_input,
-            random_seed_checkbox,
-            seed_input
-        ],
+        inputs=[prompt_input, voice_dropdown, emotion_input, random_seed_checkbox, seed_input],
         outputs=[audio_output, status_output]
+    ).then(
+        fn=hide_loading,
+        inputs=[],
+        outputs=[status_output, submit_button]
     )
-
 
     gr.Examples(
         examples=[
-            ["Hello there! This is a test of the text-to-speech system.", "alloy", "neutral", False, 12345],
-            ["Surely *you* wouldn't want *that*. [laughs]", "shimmer", "sarcastic and mocking", True, 12345],
-            ["[sobbing] I am feeling... [sighs] a bit down today [cry]", "fable", "sad and depressed, with stammering", True, 662437],
-            ["This technology is absolutely amazing!", "nova", "excited and joyful", True, 12345],
+            ["Hello! Testing text-to-speech.", "alloy", "neutral", True, 12345],
+            ["I'm excited to show you what I can do!", "nova", "excited", True, 12345],
+            ["This is surprisingly realistic.", "shimmer", "calm and robotic", False, 56789],
         ],
         inputs=[prompt_input, voice_dropdown, emotion_input, random_seed_checkbox, seed_input],
         outputs=[audio_output, status_output],
         fn=text_to_speech_app,
-        cache_examples=False, 
+        cache_examples=False
     )
 
-
 if __name__ == "__main__":
-    
     if NSFW_URL_TEMPLATE and TTS_URL_TEMPLATE:
         app.launch()
     else:
-        print("ERROR: Cannot launch app. Required API URL secrets are missing.")
-        
+        print("Missing environment variables for API URLs.")
