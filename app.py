@@ -186,7 +186,8 @@ with gr.Blocks() as app:
             random_seed_checkbox,
             seed_input
         ],
-        outputs=[audio_output, status_output]
+        outputs=[audio_output, status_output],
+        concurrency_limit=None
     )
 
 
