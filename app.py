@@ -209,7 +209,7 @@ with gr.Blocks() as app:
 if __name__ == "__main__":
     
     if NSFW_URL_TEMPLATE and TTS_URL_TEMPLATE:
-        app.launch(ssr_mode=False)
+        app.launch()
     else:
         print("ERROR: Cannot launch app. Required API URL secrets are missing.")
         
