@@ -107,7 +107,7 @@ def text_to_speech_app(prompt: str, voice: str, emotion: str, use_random_seed: b
     print("Checking prompt safety...")
     try:
         # is_nsfw = check_nsfw(prompt)
-        is_nsfw = false
+        is_nsfw = False
     except gr.Error as e:
         return None, f"There was an error. Please wait for a second and try again."
 
