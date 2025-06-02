@@ -188,7 +188,7 @@ with gr.Blocks() as app:
             seed_input
         ],
         outputs=[audio_output, status_output],
-        concurrency_limit=None
+        concurrency_limit=30
     )
 
 
