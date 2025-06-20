@@ -149,11 +149,6 @@ with gr.Blocks() as app:
         Use it as much as you want.
         
         
-        **Like & follow** for more AI projects:
-
-        
-        • Instagram: [@nihal_gazi_io](https://www.instagram.com/nihal_gazi_io/)  
-        • Discord: nihal_gazi_io"""
     )
 
     with gr.Row():
