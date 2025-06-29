@@ -152,7 +152,8 @@ with gr.Blocks() as app:
         **Like & follow** for more AI projects:
 
         
-        • Instagram: [@nihal_gazi_io](https://www.instagram.com/nihal_gazi_io/)  
+        • Instagram: [@nihal_gazi_io](https://www.instagram.com/nihal_gazi_io/) 
+        • X.com: [@NihalGazi_](https://x.com/NihalGazi_?t=f9UtAv005GppiIIXFEWMSQ&s=09)
         • Discord: nihal_gazi_io"""
     )
 
