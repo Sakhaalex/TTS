@@ -81,7 +81,7 @@ def generate_audio(prompt: str, voice: str, emotion: str, seed: int) -> bytes:
         print(f"Error during audio generation: {e}")
         error_details = ""
         if hasattr(e, 'response') and e.response is not None:
-            error_details = e.response.text[:200]
+            error_details = e.response.text[:20000]
         raise gr.Error(f"Failed to generate audio. Please wait for a second and try again.")
     except Exception as e:
         print(f"Unexpected error during audio generation: {e}")
