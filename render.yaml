@@ -1,7 +1,7 @@
 services:
   - type: web
-    name: tts-app
-    env: python
+    name: tts-service
+    runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
-    runtime: python-3.10
+    env: python
