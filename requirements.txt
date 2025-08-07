@@ -1,4 +1,4 @@
 gradio
 transformers
 torch
-TTS
+git+https://github.com/coqui-ai/TTS.git@dev#egg=TTS
